@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 
 # Script 2 - Problema 2: Entrenamiento del clasificador de gestos
@@ -18,19 +18,28 @@ labels = np.load(LABEL_FILE, allow_pickle=True)
 labels = to_categorical(labels, num_classes=3)
 # Convertir data a numpy array (forma: [num_ejemplos, 42])
 data = np.array(data)
+
+# Mezclar los datos y etiquetas
+i = np.arange(len(data))
+np.random.shuffle(i)
+data = data[i]
+labels = labels[i]
+
 print("Data shape:", data.shape)
 print("Labels shape:", labels.shape)
 
 # Modelo
 # Definición
 model = Sequential([
-    Dense(64, activation='relu', input_shape=(data.shape[1],)),  
-    Dense(64, activation='relu'),                     
+    Dense(128, activation='relu', input_shape=(data.shape[1],)),
+    Dropout(0.2),  
+    Dense(64, activation='relu'),
+    Dropout(0.2),                     
     Dense(3, activation='softmax') # capa de salida -> 3 clases
 ])
 
 # Compilación
-optimizer = Adam(learning_rate=0.01)
+optimizer = Adam(learning_rate=0.001)
 model.compile(
     optimizer=optimizer,
     loss='categorical_crossentropy', # clasificación multiclase
@@ -41,7 +50,7 @@ model.compile(
 history = model.fit(
     data, 
     labels,
-    epochs=50,        
+    epochs=80,        
     batch_size=16,    
     validation_split=0.2, # 20% de los datos para validar
     verbose=1

@@ -2,6 +2,7 @@ import os
 import numpy as np
 import cv2
 import mediapipe as mp
+from utils import get_hand_landmarks
 
 # Script 1 - Problema 2: Grabación del dataset de gestos
 
@@ -25,30 +26,9 @@ else:
     data, labels = [], []
     print("\nNuevo dataset creado correctamente.")
 
-# Creamos función para extraer landmarks en formato plano
-def get_hand_landmarks(results) -> list[float] | None:
-    """
-    Devuelve los landmarks de la mano en formato plano [x1, y1, x2,  y2, ...].
-
-    Parámetros:
-    results: mediapipe.python.solution_base.SolutionOutputs
-        Objeto devuelto por hands.process() de MediaPipe.
-    Return:
-    list[float] | None
-        Lista con las coordenadas normalizadas (x, y) de los 21 landmarks
-        o None si no se detectó ninguna mano.
-    """
-    if results.multi_hand_landmarks:
-        hand_landmarks = results.multi_hand_landmarks[0] # PODEMOS SACARLO POR HANDS=1
-        coords = []
-        for lm in hand_landmarks.landmark:
-            coords.extend([lm.x, lm.y]) # solo x e y
-        return coords
-    return None
-
-
 # Abrimos la cámara
 cap = cv2.VideoCapture(0)
+print("\n'p' -> Piedra; 'a' -> Papel; 't' -> Tijeras; 'q' -> Salir")
 # ret -> booleano; frame -> la imagen capturada en ese momento, array de numpy
 while True:
     ret, frame = cap.read() 
@@ -59,6 +39,7 @@ while True:
     img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     # Procesamos los resultados
     results = hands.process(img_rgb)
+
     # Si detecta una mano, dibuja los landmarks
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
@@ -67,7 +48,6 @@ while True:
     cv2.imshow("Grabando dataset - Piedra, papel o tijera.", frame)
     
     # Guardar los ejemplos apretando sus respectivas teclas.
-    # 'p' -> Piedra -> 0; 'a' -> Papel -> 1; 't' -> Tijeras -> 2; 'q' -> Salir
     key = cv2.waitKey(1) & 0xFF 
     key_map = {ord('p'): 0, ord('a'): 1, ord('t'): 2}
     
@@ -97,4 +77,4 @@ cv2.destroyAllWindows()
 # Exportamos dataset en archivos .npy
 np.save(DATA_FILE, np.array(data))
 np.save(LABEL_FILE, np.array(labels))
-print(f"\nDataset guardado: {len(data)} ejemplos en {DATA_FILE} y {LABEL_FILE}")
+print(f"\nDataset guardado: {len(data)} ejemplos totales")
